@@ -83,7 +83,7 @@ final class AppModel: ObservableObject {
             }
             Notifier.requestAuthorization()
             rescheduleNotification()
-        } catch TaskflowError.vaultMissing {
+        } catch FloataskError.vaultMissing {
             needsVault = true
             show(Banner(message: "Your Obsidian vault could not be found.", detail: layout.vault.path))
         } catch {
@@ -344,9 +344,9 @@ final class AppModel: ObservableObject {
     func show(_ error: Error) {
         Log.write("error: \(error)")
         switch error {
-        case TaskflowError.writeFailed, TaskflowError.validationFailed:
-            show(Banner(message: "Taskflow couldn't save your changes.", detail: "Your existing vault data was not overwritten.", retry: true))
-        case TaskflowError.unreadable:
+        case FloataskError.writeFailed, FloataskError.validationFailed:
+            show(Banner(message: "Floatask couldn't save your changes.", detail: "Your existing vault data was not overwritten.", retry: true))
+        case FloataskError.unreadable:
             show(Banner(message: "Some task data could not be read.", detail: "Check Tasks.md in your vault."))
         default:
             show(Banner(message: error.localizedDescription))

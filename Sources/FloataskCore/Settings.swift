@@ -47,7 +47,7 @@ public enum SettingsDocument {
 
         # Task Manager Settings
 
-        These values are read by Taskflow. Edit them here or in the app's settings (⋯ → Settings).
+        These values are read by Floatask. Edit them here or in the app's settings (⋯ → Settings).
         API keys are never stored in this file — they live in the macOS Keychain.
 
         """
@@ -55,7 +55,7 @@ public enum SettingsDocument {
 }
 
 /// Machine-local configuration (not in the vault): which vault to use and window state.
-/// Stored at ~/Library/Application Support/Taskflow/config.json. Disposable.
+/// Stored at ~/Library/Application Support/Floatask/config.json. Disposable.
 public struct LocalConfig: Codable, Equatable {
     public var vaultPath: String?
     public var folderName: String = "Task Manager"
@@ -70,7 +70,7 @@ public struct LocalConfig: Codable, Equatable {
 
     public static var directory: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return base.appendingPathComponent("Taskflow", isDirectory: true)
+        return base.appendingPathComponent("Floatask", isDirectory: true)
     }
 
     public static var fileURL: URL { directory.appendingPathComponent("config.json") }

@@ -78,14 +78,14 @@ public final class TaskService {
         self.layout = layout
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: layout.vault.path, isDirectory: &isDir), isDir.boolValue else {
-            throw TaskflowError.vaultMissing(layout.vault.path)
+            throw FloataskError.vaultMissing(layout.vault.path)
         }
         try ensureFiles()
         try reload()
     }
 
     public static func fromLocalConfig() throws -> TaskService {
-        guard let layout = LocalConfig.load().layout else { throw TaskflowError.notConfigured }
+        guard let layout = LocalConfig.load().layout else { throw FloataskError.notConfigured }
         return try TaskService(layout: layout)
     }
 
@@ -183,7 +183,7 @@ public final class TaskService {
         let a = check.taskLines, b = expected.taskLines
         guard a.count == b.count, zip(a, b).allSatisfy({ $0.id == $1.id && $0.isDone == $1.isDone && $0.title == $1.title }) else {
             Log.write("validation failed writing Tasks.md")
-            throw TaskflowError.validationFailed(layout.tasks.path)
+            throw FloataskError.validationFailed(layout.tasks.path)
         }
     }
 
@@ -200,7 +200,7 @@ public final class TaskService {
             try body(&sessions)
             let out = SessionsDocument.serialize(sessions)
             guard SessionsDocument.parse(out).sessions.count == sessions.count else {
-                throw TaskflowError.validationFailed(layout.sessions.path)
+                throw FloataskError.validationFailed(layout.sessions.path)
             }
             if out != original {
                 SafeFile.backup(layout.sessions, into: layout.backupDir)
@@ -228,13 +228,13 @@ public final class TaskService {
                         priority: Priority? = nil, tags: [String] = [], notes: String = "",
                         now: Date = Date()) throws -> String {
         let clean = TaskLine.clean(title)
-        guard !clean.isEmpty else { throw TaskflowError.invalid("A task needs a title.") }
-        if let due, !Dates.isValidDay(due) { throw TaskflowError.invalid("Due date must look like 2026-10-02.") }
+        guard !clean.isEmpty else { throw FloataskError.invalid("A task needs a title.") }
+        if let due, !Dates.isValidDay(due) { throw FloataskError.invalid("Due date must look like 2026-10-02.") }
         var parent = parentId
         if let p = parentId { parent = try ensurePersisted(p) }
         var newId = ""
         try mutateTasks(now: now) { doc in
-            if let parent, doc.task(parent) == nil { throw TaskflowError.taskNotFound(parent) }
+            if let parent, doc.task(parent) == nil { throw FloataskError.taskNotFound(parent) }
             var used = Set(doc.taskLines.map(\.id))
             newId = newTaskId(now: now, avoiding: &used)
             var line = TaskLine(id: newId, title: clean, due: due, priority: priority)
@@ -252,7 +252,7 @@ public final class TaskService {
     public func setDone(_ id: String, _ done: Bool, now: Date = Date()) throws {
         var completed: [String] = []
         try mutateTasks(now: now) { doc in
-            guard doc.task(id) != nil else { throw TaskflowError.taskNotFound(id) }
+            guard doc.task(id) != nil else { throw FloataskError.taskNotFound(id) }
             let items = doc.items()
             let byId = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
             var targets = [id]
@@ -282,15 +282,15 @@ public final class TaskService {
     }
 
     public func toggle(_ id: String, now: Date = Date()) throws {
-        guard let t = snapshot.task(id) else { throw TaskflowError.taskNotFound(id) }
+        guard let t = snapshot.task(id) else { throw FloataskError.taskNotFound(id) }
         try setDone(id, !t.isDone, now: now)
     }
 
     public func updateTask(_ id: String, _ patch: TaskPatch, now: Date = Date()) throws {
-        if let title = patch.title, TaskLine.clean(title).isEmpty { throw TaskflowError.invalid("A task needs a title.") }
-        if let due = patch.due, let d = due, !Dates.isValidDay(d) { throw TaskflowError.invalid("Due date must look like 2026-10-02.") }
+        if let title = patch.title, TaskLine.clean(title).isEmpty { throw FloataskError.invalid("A task needs a title.") }
+        if let due = patch.due, let d = due, !Dates.isValidDay(d) { throw FloataskError.invalid("Due date must look like 2026-10-02.") }
         try mutateTasks(now: now) { doc in
-            guard doc.task(id) != nil else { throw TaskflowError.taskNotFound(id) }
+            guard doc.task(id) != nil else { throw FloataskError.taskNotFound(id) }
             _ = doc.modify(id) { t in
                 if let v = patch.title { t.setTitle(v) }
                 if let v = patch.notes { t.setNotes(v) }
@@ -311,14 +311,14 @@ public final class TaskService {
 
     public func deleteTask(_ id: String) throws {
         try mutateTasks { doc in
-            guard doc.task(id) != nil else { throw TaskflowError.taskNotFound(id) }
+            guard doc.task(id) != nil else { throw FloataskError.taskNotFound(id) }
             doc.removeSubtree(id)
         }
     }
 
     @discardableResult
     public func duplicateTask(_ id: String, now: Date = Date()) throws -> String {
-        guard let t = snapshot.task(id) else { throw TaskflowError.taskNotFound(id) }
+        guard let t = snapshot.task(id) else { throw FloataskError.taskNotFound(id) }
         return try addTask(title: t.title, group: t.group, parentId: t.parentId, due: t.due,
                            priority: t.priority, tags: t.tags, notes: t.notes, now: now)
     }
@@ -327,7 +327,7 @@ public final class TaskService {
     public func ensurePersisted(_ id: String) throws -> String {
         guard id.hasPrefix("tmp_") else { return id }
         let map = try mutateTasks { _ in }
-        guard let real = map[id] else { throw TaskflowError.taskNotFound(id) }
+        guard let real = map[id] else { throw FloataskError.taskNotFound(id) }
         return real
     }
 
@@ -401,7 +401,7 @@ public final class TaskService {
     // MARK: Focus sessions
 
     public func startFocus(taskId: String?, minutes: Int, now: Date = Date()) throws {
-        guard snapshot.active == nil else { throw TaskflowError.invalid("A focus session is already running.") }
+        guard snapshot.active == nil else { throw FloataskError.invalid("A focus session is already running.") }
         let s = snapshot.settings
         let planned = min(s.maxFocusMinutes, max(s.minFocusMinutes, minutes))
         var tid = taskId
@@ -417,10 +417,10 @@ public final class TaskService {
     }
 
     private func mutateActive(_ body: (inout FocusSession) throws -> Void) throws {
-        guard let activeId = snapshot.active?.id else { throw TaskflowError.noActiveSession }
+        guard let activeId = snapshot.active?.id else { throw FloataskError.noActiveSession }
         try mutateSessions { sessions in
             guard let i = sessions.firstIndex(where: { $0.id == activeId && $0.status.isActive }) else {
-                throw TaskflowError.noActiveSession
+                throw FloataskError.noActiveSession
             }
             try body(&sessions[i])
         }
@@ -462,7 +462,7 @@ public final class TaskService {
     }
 
     private func endActive(status: SessionStatus, now: Date) throws {
-        guard let activeId = snapshot.active?.id else { throw TaskflowError.noActiveSession }
+        guard let activeId = snapshot.active?.id else { throw FloataskError.noActiveSession }
         try mutateSessions { sessions in
             guard let i = sessions.firstIndex(where: { $0.id == activeId }) else { return }
             var s = sessions[i]

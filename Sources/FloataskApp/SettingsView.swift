@@ -100,9 +100,9 @@ struct SettingsView: View {
 
                 section("Terminal") {
                     VStack(alignment: .leading, spacing: 3) {
-                        shortcut("taskflow", "Open the panel")
-                        shortcut("taskflow quit", "Close the app")
-                        shortcut("taskflow help", "All commands")
+                        shortcut("floatask", "Open the panel")
+                        shortcut("floatask quit", "Close the app")
+                        shortcut("floatask help", "All commands")
                     }
                 }
 

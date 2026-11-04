@@ -72,7 +72,7 @@ public enum SessionsDocument {
 
     public static func serialize(_ sessions: [FocusSession]) -> String {
         var out = ["---", "schema_version: 1", "type: task_manager_sessions", "---", "", "# Focus Sessions", ""]
-        out.append("_Managed by Taskflow. Values can be edited; keep one `- session_id:` item per session._")
+        out.append("_Managed by Floatask. Values can be edited; keep one `- session_id:` item per session._")
         let sorted = sessions.sorted { $0.startedAt > $1.startedAt }
         var currentDay: String?
         for s in sorted {

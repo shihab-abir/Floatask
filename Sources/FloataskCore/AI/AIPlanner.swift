@@ -36,7 +36,7 @@ public struct AIPlanner {
     }
 
     static let system = """
-        You are the assistant inside Taskflow, a small to-do app. Turn the user's request into operations on \
+        You are the assistant inside Floatask, a small to-do app. Turn the user's request into operations on \
         their task list. Respond with ONLY one JSON object and nothing else:
         {"reply": "one or two short, friendly sentences for the user", "operations": [ ... ]}
 

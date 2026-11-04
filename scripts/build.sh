@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds build/Taskflow.app (the app plus the `taskflow` CLI inside it).
+# Builds build/Floatask.app (the app plus the `floatask` CLI inside it).
 # Works with just the Xcode Command Line Tools — no Xcode project or SwiftPM needed.
 #
 #   scripts/build.sh           optimised build
@@ -11,21 +11,21 @@ OPT=(-O)
 [[ "${1:-}" == "--debug" ]] && OPT=(-Onone -g)
 SWIFTC=(swiftc -swift-version 5 -target arm64-apple-macos26.0)
 VERSION="$(tr -d '[:space:]' < VERSION)"
-APP="build/Taskflow.app"
+APP="build/Floatask.app"
 
 scripts/gen-buildinfo.sh
-CORE=(Sources/TaskflowCore/*.swift Sources/TaskflowCore/AI/*.swift build/generated/BuildInfo.swift)
+CORE=(Sources/FloataskCore/*.swift Sources/FloataskCore/AI/*.swift build/generated/BuildInfo.swift)
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-echo "→ compiling Taskflow.app ($VERSION)"
-"${SWIFTC[@]}" "${OPT[@]}" -parse-as-library "${CORE[@]}" Sources/TaskflowApp/*.swift \
-  -o "$APP/Contents/MacOS/Taskflow"
+echo "→ compiling Floatask.app ($VERSION)"
+"${SWIFTC[@]}" "${OPT[@]}" -parse-as-library "${CORE[@]}" Sources/FloataskApp/*.swift \
+  -o "$APP/Contents/MacOS/Floatask"
 
-echo "→ compiling taskflow CLI"
-"${SWIFTC[@]}" "${OPT[@]}" "${CORE[@]}" Sources/TaskflowCLI/main.swift \
-  -o "$APP/Contents/MacOS/taskflow-cli"
+echo "→ compiling floatask CLI"
+"${SWIFTC[@]}" "${OPT[@]}" "${CORE[@]}" Sources/FloataskCLI/main.swift \
+  -o "$APP/Contents/MacOS/floatask-cli"
 
 sed "s/__VERSION__/$VERSION/g" Resources/Info.plist > "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"

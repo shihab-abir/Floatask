@@ -60,7 +60,7 @@ struct PanelView: View {
                 .lineLimit(1)
             Spacer(minLength: 4)
             IconButton(symbol: "minus", help: "Collapse to floating button (⌘M)", action: onMinimize)
-            IconButton(symbol: "xmark", help: "Quit Taskflow", action: onClose)
+            IconButton(symbol: "xmark", help: "Quit Floatask", action: onClose)
         }
         .padding(.horizontal, 8)
         .frame(height: 38)
@@ -70,7 +70,7 @@ struct PanelView: View {
 
     private var title: String {
         switch model.route {
-        case .tasks: return "Taskflow"
+        case .tasks: return "Floatask"
         case .history: return "History"
         case .assistant: return "Assistant"
         case .settings: return "Settings"
@@ -154,7 +154,7 @@ struct WelcomeView: View {
                 .padding(.horizontal, 24)
             Button("Choose Vault…", action: onChooseVault)
                 .buttonStyle(QuietButtonStyle(prominent: true, tint: Theme.accent))
-            Text("or in Terminal: taskflow config \"/path/to/vault\"")
+            Text("or in Terminal: floatask config \"/path/to/vault\"")
                 .font(.system(size: 10.5, design: .monospaced))
                 .foregroundStyle(Theme.tertiary)
             Spacer()

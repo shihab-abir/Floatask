@@ -1,12 +1,12 @@
 # Contributing
 
-Thanks for helping improve Taskflow! Bug reports and small, focused pull requests are very welcome.
+Thanks for helping improve Floatask! Bug reports and small, focused pull requests are very welcome.
 
 ## Project layout
 
 ```text
 Sources/
-├── TaskflowCore/      shared logic, no UI. Used by both the app and the CLI
+├── FloataskCore/      shared logic, no UI. Used by both the app and the CLI
 │   ├── Models.swift           tasks, focus sessions, settings
 │   ├── TasksDocument.swift    Tasks.md / archive parser + writer (lossless round-trip)
 │   ├── SessionsDocument.swift Sessions.md parser + writer
@@ -15,8 +15,8 @@ Sources/
 │   ├── Settings.swift         Settings.md + local config (window frames, vault path)
 │   ├── Dates.swift            date helpers + deterministic natural-language dates
 │   └── AI/                    provider-agnostic assistant (Apple on-device, Claude API)
-├── TaskflowApp/       AppKit floating panels + SwiftUI views (UI only, no business logic)
-└── TaskflowCLI/       the `taskflow` command
+├── FloataskApp/       AppKit floating panels + SwiftUI views (UI only, no business logic)
+└── FloataskCLI/       the `floatask` command
 Tests/                 core test suite (plain Swift runner)
 Resources/             Info.plist template, app icon
 scripts/               build, test, package, icon generation
@@ -33,32 +33,32 @@ Xcode works too.
 
 ```bash
 scripts/test.sh              # run the core tests
-scripts/build.sh --debug     # fast build → build/Taskflow.app
+scripts/build.sh --debug     # fast build → build/Floatask.app
 ./install.sh --from-source   # build + install to ~/Applications and link the CLI
 ```
 
 ### Why plain `swiftc` scripts instead of Xcode or SwiftPM?
 
-So that anyone can build Taskflow with only the free Command Line Tools. Two consequences:
+So that anyone can build Floatask with only the free Command Line Tools. Two consequences:
 - The macOS 26 SDK declares SwiftUI's `@State` as a macro, and its plugin ships only with Xcode.
   Views therefore use `@ViewState`, an alias for the same property wrapper (see
-  `Sources/TaskflowApp/Theme.swift`). Please keep using it.
+  `Sources/FloataskApp/Theme.swift`). Please keep using it.
 - Foundation Models' `@Generable` macro isn't available either, so the assistant asks the model for
   JSON as text and validates it in `AIPlanner`.
 
 ### Reviewing UI changes without screenshots
 
 The running app accepts two development commands over a distributed notification
-(`io.github.shihab-abir.taskflow.command`):
+(`io.github.shihab-abir.floatask.command`):
 - `route:<tasks|history|assistant|settings|picker>` switches screen.
 - `snapshot` renders the panel and the pill to PNGs in
-  `~/Library/Application Support/Taskflow/snapshots/`.
+  `~/Library/Application Support/Floatask/snapshots/`.
 
 ## Style
 
 - Match the surrounding code: small types, comments that explain *why*, no business logic in views.
 - Keep the UI calm: one accent colour (sage), amber only while a focus session runs, quiet metadata.
-- Add or update tests in `Tests/` for anything in `TaskflowCore`.
+- Add or update tests in `Tests/` for anything in `FloataskCore`.
 - Any change to the file format must stay readable by older versions, or bump `schema_version` and
   document the migration in `docs/FORMAT.md`.
 
@@ -70,7 +70,7 @@ The running app accepts two development commands over a distributed notification
    git tag vX.Y.Z && git push origin main vX.Y.Z
    ```
 3. The **Release** workflow tests and packages the app, then publishes
-   `Taskflow-X.Y.Z-macos-arm64.zip` with its checksum. `install.sh` always picks up the latest
+   `Floatask-X.Y.Z-macos-arm64.zip` with its checksum. `install.sh` always picks up the latest
    release.
 
 Builds are ad-hoc signed. Once a Developer ID is available, add signing and notarization

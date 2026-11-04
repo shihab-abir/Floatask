@@ -6,19 +6,19 @@ public enum SafeFile {
     public static func write(_ data: Data, to url: URL) throws {
         let dir = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let tmp = dir.appendingPathComponent(".\(url.lastPathComponent).taskflow-\(UUID().uuidString.prefix(8)).tmp")
+        let tmp = dir.appendingPathComponent(".\(url.lastPathComponent).floatask-\(UUID().uuidString.prefix(8)).tmp")
         guard FileManager.default.createFile(atPath: tmp.path, contents: nil) else {
-            throw TaskflowError.writeFailed(url.path)
+            throw FloataskError.writeFailed(url.path)
         }
         do {
             let h = try FileHandle(forWritingTo: tmp)
             try h.write(contentsOf: data)
             try h.synchronize()
             try h.close()
-            if rename(tmp.path, url.path) != 0 { throw TaskflowError.writeFailed(url.path) }
+            if rename(tmp.path, url.path) != 0 { throw FloataskError.writeFailed(url.path) }
         } catch {
             try? FileManager.default.removeItem(at: tmp)
-            throw error is TaskflowError ? error : TaskflowError.writeFailed(url.path)
+            throw error is FloataskError ? error : FloataskError.writeFailed(url.path)
         }
     }
 
@@ -30,12 +30,12 @@ public enum SafeFile {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         do {
             let data = try Data(contentsOf: url)
-            guard let s = String(data: data, encoding: .utf8) else { throw TaskflowError.unreadable(url.path) }
+            guard let s = String(data: data, encoding: .utf8) else { throw FloataskError.unreadable(url.path) }
             return s
-        } catch let e as TaskflowError {
+        } catch let e as FloataskError {
             throw e
         } catch {
-            throw TaskflowError.unreadable(url.path)
+            throw FloataskError.unreadable(url.path)
         }
     }
 
@@ -80,7 +80,7 @@ public final class VaultLock {
     }
 }
 
-public enum TaskflowError: LocalizedError, Equatable {
+public enum FloataskError: LocalizedError, Equatable {
     case vaultMissing(String)
     case notConfigured
     case writeFailed(String)
@@ -94,9 +94,9 @@ public enum TaskflowError: LocalizedError, Equatable {
         switch self {
         case .vaultMissing: return "Your Obsidian vault could not be found."
         case .notConfigured: return "No Obsidian vault is configured yet."
-        case .writeFailed: return "Taskflow couldn't save your changes. Your existing vault data was not overwritten."
+        case .writeFailed: return "Floatask couldn't save your changes. Your existing vault data was not overwritten."
         case .unreadable: return "Some task data could not be read."
-        case .validationFailed: return "Taskflow couldn't save your changes safely. Your existing vault data was not overwritten."
+        case .validationFailed: return "Floatask couldn't save your changes safely. Your existing vault data was not overwritten."
         case .taskNotFound: return "That task no longer exists."
         case .invalid(let why): return why
         case .noActiveSession: return "There is no focus session running."
@@ -104,10 +104,10 @@ public enum TaskflowError: LocalizedError, Equatable {
     }
 }
 
-/// Minimal local log for debugging (~/Library/Logs/Taskflow.log).
+/// Minimal local log for debugging (~/Library/Logs/Floatask.log).
 public enum Log {
     static let url = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Logs/Taskflow.log")
+        .appendingPathComponent("Library/Logs/Floatask.log")
 
     public static func write(_ message: String) {
         let line = "\(Dates.iso(Date())) \(message)\n"

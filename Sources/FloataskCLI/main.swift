@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-// taskflow — terminal front-end. Uses the same TaskService as the app, so data can't drift.
+// floatask — terminal front-end. Uses the same TaskService as the app, so data can't drift.
 
 let bundleId = AppIdentity.bundleId
 let commandNotification = AppIdentity.commandNotification
@@ -18,7 +18,7 @@ func percent(_ p: (done: Int, total: Int)) -> Int {
 }
 
 func fail(_ message: String, code: Int32 = 1) -> Never {
-    FileHandle.standardError.write(Data("taskflow: \(message)\n".utf8))
+    FileHandle.standardError.write(Data("floatask: \(message)\n".utf8))
     exit(code)
 }
 
@@ -28,10 +28,10 @@ func service() -> TaskService {
         try s.reconcileFocus()
         try s.rollover()
         return s
-    } catch TaskflowError.notConfigured {
-        fail("no vault configured yet. Run: taskflow config \"/path/to/your/vault\"")
-    } catch TaskflowError.vaultMissing(let path) {
-        fail("your Obsidian vault could not be found at \(path). Run: taskflow config \"/path/to/vault\"")
+    } catch FloataskError.notConfigured {
+        fail("no vault configured yet. Run: floatask config \"/path/to/your/vault\"")
+    } catch FloataskError.vaultMissing(let path) {
+        fail("your Obsidian vault could not be found at \(path). Run: floatask config \"/path/to/vault\"")
     } catch {
         fail(error.localizedDescription)
     }
@@ -59,7 +59,7 @@ func openApp() {
     try? p.run()
     p.waitUntilExit()
     if p.terminationStatus != 0 {
-        fail("couldn't find Taskflow.app. Reinstall it: https://github.com/shihab-abir/Work-Management-App#install")
+        fail("couldn't find Floatask.app. Reinstall it: https://github.com/shihab-abir/Floatask#install")
     }
 }
 
@@ -73,8 +73,8 @@ func resolve(_ ref: String, in s: TaskService) -> TaskItem {
     if let t = s.snapshot.task(ref) { return t }
     let matches = list.filter { $0.title.localizedCaseInsensitiveContains(ref) }
     if matches.count == 1 { return matches[0] }
-    if matches.count > 1 { fail("\"\(ref)\" matches \(matches.count) tasks — use the number from `taskflow list`.") }
-    fail("no task \"\(ref)\". Use the number shown by `taskflow list`.")
+    if matches.count > 1 { fail("\"\(ref)\" matches \(matches.count) tasks — use the number from `floatask list`.") }
+    fail("no task \"\(ref)\". Use the number shown by `floatask list`.")
 }
 
 // MARK: Printing
@@ -83,7 +83,7 @@ func printList(_ s: TaskService) {
     let list = visibleNumbered(s)
     let p = s.snapshot.progress()
     if list.isEmpty {
-        print("No tasks yet.  Add one: taskflow add \"Write project documentation\"")
+        print("No tasks yet.  Add one: floatask add \"Write project documentation\"")
         return
     }
     let pct = percent(p)
@@ -143,37 +143,37 @@ func printHistory(_ s: TaskService) {
             print("  \(Dates.duration(secs).padding(toLength: 7, withPad: " ", startingAt: 0)) \(session.taskTitle)\(mark)")
         }
     }
-    if s.snapshot.sessions.isEmpty { print("\nNo focus sessions yet. Start one with: taskflow focus 1") }
+    if s.snapshot.sessions.isEmpty { print("\nNo focus sessions yet. Start one with: floatask focus 1") }
 }
 
 func usage() {
     print("""
-    \(bold("taskflow")) — floating task manager backed by your Obsidian vault
+    \(bold("floatask")) — floating task manager backed by your Obsidian vault
 
     \(bold("App"))
-      taskflow                 open the floating panel (same as `taskflow open`)
-      taskflow hide            collapse the panel to the small floating button
-      taskflow quit            close the app (a running timer keeps its state)
+      floatask                 open the floating panel (same as `floatask open`)
+      floatask hide            collapse the panel to the small floating button
+      floatask quit            close the app (a running timer keeps its state)
 
     \(bold("Tasks"))
-      taskflow list            show open tasks with numbers   (alias: today, ls)
-      taskflow add "Title" [--due tomorrow|2026-10-02] [--group Name] [--priority high|medium|low] [--under N]
-      taskflow done N          complete task number N          (undo N reopens it)
-      taskflow rm N            delete task N (asks first)
+      floatask list            show open tasks with numbers   (alias: today, ls)
+      floatask add "Title" [--due tomorrow|2026-10-02] [--group Name] [--priority high|medium|low] [--under N]
+      floatask done N          complete task number N          (undo N reopens it)
+      floatask rm N            delete task N (asks first)
 
     \(bold("Focus"))
-      taskflow focus N [MIN]   start a focus session on task N (default length from settings)
-      taskflow pause | resume | stop
-      taskflow status          compact summary
-      taskflow history         recent focus sessions and totals
+      floatask focus N [MIN]   start a focus session on task N (default length from settings)
+      floatask pause | resume | stop
+      floatask status          compact summary
+      floatask history         recent focus sessions and totals
 
     \(bold("Assistant"))
-      taskflow ask "Break the website launch into steps"
+      floatask ask "Break the website launch into steps"
 
     \(bold("Setup"))
-      taskflow config          show configuration
-      taskflow config PATH     use the Obsidian vault at PATH
-      taskflow version
+      floatask config          show configuration
+      floatask config PATH     use the Obsidian vault at PATH
+      floatask version
     """)
 }
 
@@ -197,18 +197,18 @@ let command = args.isEmpty ? "open" : args.removeFirst()
 switch command {
 case "open", "show":
     if LocalConfig.load().layout == nil && !appIsRunning {
-        print("Tip: set your vault first with  taskflow config \"/path/to/vault\"  (or choose it in the app).")
+        print("Tip: set your vault first with  floatask config \"/path/to/vault\"  (or choose it in the app).")
     }
     openApp()
 
 case "hide", "minimize":
-    guard appIsRunning else { fail("Taskflow isn't running. Open it with: taskflow") }
+    guard appIsRunning else { fail("Floatask isn't running. Open it with: floatask") }
     send("hide")
 
 case "quit", "close":
-    guard appIsRunning else { print("Taskflow isn't running."); exit(0) }
+    guard appIsRunning else { print("Floatask isn't running."); exit(0) }
     send("quit")
-    print("Closing Taskflow.")
+    print("Closing Floatask.")
 
 case "config":
     var config = LocalConfig.load()
@@ -235,7 +235,7 @@ case "config":
         run { try config.save() }
         run { _ = try TaskService(layout: config.layout!) }
         print("Vault set to \(url.path)")
-        print("Taskflow files live in \(config.layout!.folder.path)")
+        print("Floatask files live in \(config.layout!.folder.path)")
         if appIsRunning { send("reload") }
     } else {
         print("Vault:    \(config.vaultPath ?? "(not set)")")
@@ -260,7 +260,7 @@ case "add":
     let priority = flag("--priority", in: &args)
     let under = flag("--under", in: &args)
     let title = args.joined(separator: " ")
-    guard !title.isEmpty else { fail("usage: taskflow add \"Task title\"") }
+    guard !title.isEmpty else { fail("usage: floatask add \"Task title\"") }
     var dueDay: String?
     if let due {
         dueDay = Dates.isValidDay(due) ? due : NaturalDate.find(in: due)?.day
@@ -278,7 +278,7 @@ case "add":
     }
 
 case "done", "check", "undo", "uncheck":
-    guard let ref = args.first else { fail("usage: taskflow \(command) N") }
+    guard let ref = args.first else { fail("usage: floatask \(command) N") }
     let s = service()
     let t = resolve(ref, in: s)
     let done = command == "done" || command == "check"
@@ -290,7 +290,7 @@ case "done", "check", "undo", "uncheck":
     }
 
 case "rm", "delete":
-    guard let ref = args.first else { fail("usage: taskflow rm N") }
+    guard let ref = args.first else { fail("usage: floatask rm N") }
     let s = service()
     let t = resolve(ref, in: s)
     let kids = s.snapshot.tasks.filter { $0.parentId == t.id }.count
@@ -305,7 +305,7 @@ case "focus", "start":
     }
     guard let ref = args.first else {
         openApp()
-        print("Pick a task in the panel, or run: taskflow focus N")
+        print("Pick a task in the panel, or run: floatask focus N")
         exit(0)
     }
     let t = resolve(ref, in: s)
@@ -328,7 +328,7 @@ case "stop", "finish":
 case "ask", "ai":
     let s = service()
     let request = args.joined(separator: " ")
-    guard !request.isEmpty else { fail("usage: taskflow ask \"what should I work on next?\"") }
+    guard !request.isEmpty else { fail("usage: floatask ask \"what should I work on next?\"") }
     let settings = s.snapshot.settings
     guard settings.aiEnabled else { fail("the assistant is turned off in Settings.md (ai_enabled: false)") }
     let provider: AIProvider = settings.aiProvider == "anthropic"
@@ -358,7 +358,7 @@ case "ask", "ai":
     }
 
 case "version", "--version", "-v":
-    print("taskflow \(AppIdentity.version) (\(AppIdentity.commit))")
+    print("floatask \(AppIdentity.version) (\(AppIdentity.commit))")
 
 case "help", "-h", "--help":
     usage()

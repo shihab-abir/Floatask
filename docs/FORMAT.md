@@ -1,13 +1,13 @@
-# Taskflow vault format (schema_version 1)
+# Floatask vault format (schema_version 1)
 
-Taskflow stores everything in a `Task Manager/` folder inside your Obsidian vault. The files are
-plain Markdown: you can read and edit them in Obsidian, and Taskflow picks up the changes within
+Floatask stores everything in a `Task Manager/` folder inside your Obsidian vault. The files are
+plain Markdown: you can read and edit them in Obsidian, and Floatask picks up the changes within
 about a second.
 
 ```
 <vault>/Task Manager/
 ├── Tasks.md          open tasks + tasks completed today
-├── Sessions.md       focus-session log (managed by Taskflow)
+├── Sessions.md       focus-session log (managed by Floatask)
 ├── Settings.md       preferences (frontmatter)
 ├── Archive/
 │   └── YYYY-MM.md    completed tasks, moved here the day after completion
@@ -46,10 +46,10 @@ type: task_manager_tasks
   - `id` is stable and never reused.
   - `created` and `done` are ISO-8601 timestamps.
   - Values are percent-encoded (spaces become `%20`).
-- **Tasks you type in Obsidian** don't need an id. Taskflow adds one the next time it saves the file.
-  If you tick a box in Obsidian, Taskflow adds the `done:` time about 3 seconds later.
+- **Tasks you type in Obsidian** don't need an id. Floatask adds one the next time it saves the file.
+  If you tick a box in Obsidian, Floatask adds the `done:` time about 3 seconds later.
 - **Everything else in the file** is kept exactly as written: paragraphs, other lists, blank lines.
-  Lines Taskflow doesn't change are written back byte-for-byte.
+  Lines Floatask doesn't change are written back byte-for-byte.
 
 ## Archive/YYYY-MM.md
 
@@ -89,13 +89,13 @@ in a fixed order after every change: newest day first, one `- session_id:` item 
 Flat `key: value` frontmatter. It covers `default_focus_minutes`, `timer_step_minutes`, `sound`,
 `notifications`, `completing_task_stops_focus`, `theme` (system/light/dark), `opacity`,
 `ai_enabled`, `ai_provider` (apple/anthropic), `ai_model` and `ai_confirm_destructive`. API keys are
-**never** stored here. They live in the macOS Keychain (service `io.github.shihab-abir.taskflow`).
+**never** stored here. They live in the macOS Keychain (service `io.github.shihab-abir.floatask`).
 
 ## Outside the vault (disposable)
 
-- `~/Library/Application Support/Taskflow/config.json`: vault path, window positions, collapsed
+- `~/Library/Application Support/Floatask/config.json`: vault path, window positions, collapsed
   state, last-selected focus task.
-- `~/Library/Logs/Taskflow.log`: error log.
+- `~/Library/Logs/Floatask.log`: error log.
 
 ## Safety
 

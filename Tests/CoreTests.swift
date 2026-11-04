@@ -15,7 +15,7 @@ func test(_ name: String, _ body: () throws -> Void) {
 }
 
 func tempVault() -> VaultLayout {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("taskflow-test-\(UUID().uuidString)")
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("floatask-test-\(UUID().uuidString)")
     try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     return VaultLayout(vault: dir)
 }

@@ -588,9 +588,9 @@ struct PillView: View {
         .frame(width: PillView.size.width, height: PillView.size.height)
         .background(Capsule().fill(Theme.surface))
         .overlay(Capsule().strokeBorder(Theme.border))
-        .help("Click to open Taskflow · drag to move")
+        .help("Click to open Floatask · drag to move")
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(a.map { "Focus timer \(Dates.clock($0.remainingSeconds(at: model.now))) remaining. Open Taskflow" } ?? "\(p.done) of \(p.total) tasks done. Open Taskflow")
+        .accessibilityLabel(a.map { "Focus timer \(Dates.clock($0.remainingSeconds(at: model.now))) remaining. Open Floatask" } ?? "\(p.done) of \(p.total) tasks done. Open Floatask")
     }
 
     private func ringValue(p: (done: Int, total: Int), a: FocusSession?) -> CGFloat {

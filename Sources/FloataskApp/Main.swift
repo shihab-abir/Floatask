@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 @main
-enum TaskflowMain {
+enum FloataskMain {
     static func main() {
         let app = NSApplication.shared
         let delegate = AppDelegate()
@@ -37,7 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel = FloatingPanel(contentRect: frame(config.panelFrame, default: defaultPanelFrame()), resizable: true)
         panel.minSize = NSSize(width: 290, height: 380)
         panel.maxSize = NSSize(width: 560, height: 1100)
-        panel.setAccessibilityTitle("Taskflow")
+        panel.setAccessibilityTitle("Floatask")
         let root = PanelView(
             onMinimize: { [weak self] in MainActor.assumeIsolated { self?.minimize() } },
             onClose: { NSApp.terminate(nil) },
@@ -48,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Minimized floating button
         pill = FloatingPanel(contentRect: frame(config.pillFrame, default: defaultPillFrame(), fixedSize: PillView.size), resizable: false)
-        pill.setAccessibilityTitle("Taskflow (collapsed)")
+        pill.setAccessibilityTitle("Floatask (collapsed)")
         let pillHost = PillHostingView(rootView: AnyView(PillView().environmentObject(model)))
         pillHost.onClick = { [weak self] in MainActor.assumeIsolated { self?.restore() } }
         pill.setHostingView(pillHost, cornerRadius: PillView.size.height / 2)
@@ -128,7 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         open.canChooseFiles = false
         open.allowsMultipleSelection = false
         open.prompt = "Use This Vault"
-        open.message = "Choose your Obsidian vault folder. Taskflow will keep its files in a “Task Manager” folder inside it."
+        open.message = "Choose your Obsidian vault folder. Floatask will keep its files in a “Task Manager” folder inside it."
         if open.runModal() == .OK, let url = open.url {
             model.chooseVault(url)
         }
@@ -158,7 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Renders the panel and pill into PNGs under Application Support/Taskflow/snapshots (no screen-recording
+    /// Renders the panel and pill into PNGs under Application Support/Floatask/snapshots (no screen-recording
     /// permission needed, since the app draws its own views).
     @MainActor
     private func writeSnapshots() {
@@ -235,7 +235,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let main = NSMenu()
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "Quit Taskflow", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit Floatask", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
         main.addItem(appItem)
         let editItem = NSMenuItem()

@@ -38,7 +38,7 @@ jobs:
 
           ### Install
           ```bash
-          curl -fsSL https://raw.githubusercontent.com/shihab-abir/Work-Management-App/main/install.sh | bash
+          curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/install.sh | bash
           ```
           Requires macOS 26+ on Apple silicon. See the README for manual installation.
           EOF
@@ -46,7 +46,7 @@ jobs:
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          name: Taskflow ${{ github.ref_name }}
+          name: Floatask ${{ github.ref_name }}
           body_path: ${{ runner.temp }}/notes.md
           files: |
             dist/*.zip

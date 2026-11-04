@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="112" alt="Taskflow icon">
+  <img src="docs/images/icon.png" width="112" alt="Floatask icon">
 </p>
 
-<h1 align="center">Taskflow</h1>
+<h1 align="center">Floatask</h1>
 
 <p align="center">
   A small, calm, always-on-top task panel for macOS. It saves everything as plain Markdown in your Obsidian vault.<br>
@@ -10,19 +10,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/shihab-abir/Work-Management-App/actions/workflows/ci.yml"><img src="https://github.com/shihab-abir/Work-Management-App/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/shihab-abir/Work-Management-App/releases/latest"><img src="https://img.shields.io/github/v/release/shihab-abir/Work-Management-App?label=release" alt="Latest release"></a>
+  <a href="https://github.com/shihab-abir/Floatask/actions/workflows/ci.yml"><img src="https://github.com/shihab-abir/Floatask/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/shihab-abir/Floatask/releases/latest"><img src="https://img.shields.io/github/v/release/shihab-abir/Floatask?label=release" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/macOS-26%2B%20·%20Apple%20silicon-5E8463" alt="macOS 26+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT license"></a>
 </p>
 
 <p align="center">
-  <img src="docs/images/panel-light.png" width="300" alt="Taskflow panel in light mode with a running focus timer">
+  <img src="docs/images/panel-light.png" width="300" alt="Floatask panel in light mode with a running focus timer">
   &nbsp;&nbsp;
-  <img src="docs/images/panel-dark.png" width="300" alt="Taskflow panel in dark mode">
+  <img src="docs/images/panel-dark.png" width="300" alt="Floatask panel in dark mode">
 </p>
 
-Taskflow floats above your other apps (Figma, your browser, your editor), so your tasks and focus
+Floatask floats above your other apps (Figma, your browser, your editor), so your tasks and focus
 timer stay in view while you work. Collapse it to a tiny pill that shows the countdown. There's no
 account and no cloud; your data lives in your own vault.
 
@@ -41,7 +41,7 @@ account and no cloud; your data lives in your own vault.
 - **Private AI assistant (optional).** "Remind me to send the invoice on Friday", "break this task
   into steps", "how did I spend my time today?" It runs on Apple Intelligence's on-device model by
   default. You can add a Claude API key if you prefer.
-- **Terminal command.** `taskflow add`, `taskflow done 3`, `taskflow focus 1`, and more.
+- **Terminal command.** `floatask add`, `floatask done 3`, `floatask focus 1`, and more.
 - **Calm by design.** Muted colours, one accent, light and dark mode, full keyboard control.
 
 ## Install
@@ -51,14 +51,14 @@ account and no cloud; your data lives in your own vault.
 Open **Terminal** and paste:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shihab-abir/Work-Management-App/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/install.sh | bash
 ```
 
 That's it. The script:
 1. downloads the latest release,
 2. checks it against its published checksum,
-3. puts `Taskflow.app` in `~/Applications`,
-4. adds the `taskflow` command,
+3. puts `Floatask.app` in `~/Applications`,
+4. adds the `floatask` command,
 5. opens the app.
 
 On first launch, pick your Obsidian vault. Any folder works if you don't use Obsidian.
@@ -66,15 +66,15 @@ On first launch, pick your Obsidian vault. Any folder works if you don't use Obs
 <details>
 <summary><b>Manual install (without Terminal)</b></summary>
 
-1. Download `Taskflow-x.y.z-macos-arm64.zip` from the
-   [latest release](https://github.com/shihab-abir/Work-Management-App/releases/latest) and unzip it.
-2. Drag **Taskflow.app** into your **Applications** folder.
-3. Taskflow isn't notarized by Apple yet, so the first time you open it macOS will block it. Go to
+1. Download `Floatask-x.y.z-macos-arm64.zip` from the
+   [latest release](https://github.com/shihab-abir/Floatask/releases/latest) and unzip it.
+2. Drag **Floatask.app** into your **Applications** folder.
+3. Floatask isn't notarized by Apple yet, so the first time you open it macOS will block it. Go to
    **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. You only need to
    do this once.
 
-The `taskflow` terminal command is optional. To add it:
-`mkdir -p ~/.local/bin && ln -sf /Applications/Taskflow.app/Contents/MacOS/taskflow-cli ~/.local/bin/taskflow`
+The `floatask` terminal command is optional. To add it:
+`mkdir -p ~/.local/bin && ln -sf /Applications/Floatask.app/Contents/MacOS/floatask-cli ~/.local/bin/floatask`
 </details>
 
 <details>
@@ -83,8 +83,8 @@ The `taskflow` terminal command is optional. To add it:
 You need Apple's Command Line Tools (`xcode-select --install`). Full Xcode isn't required.
 
 ```bash
-git clone https://github.com/shihab-abir/Work-Management-App.git
-cd Work-Management-App
+git clone https://github.com/shihab-abir/Floatask.git
+cd Floatask
 ./install.sh --from-source
 ```
 </details>
@@ -92,17 +92,17 @@ cd Work-Management-App
 **Update:** run the install command again. **Uninstall** (your tasks are kept):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shihab-abir/Work-Management-App/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/uninstall.sh | bash
 ```
 
-## Using Taskflow
+## Using Floatask
 
 | To… | Do this |
 |---|---|
-| Open the panel | `taskflow` in Terminal, or open Taskflow from Applications |
+| Open the panel | `floatask` in Terminal, or open Floatask from Applications |
 | Collapse to the floating pill | click **–** (or `⌘M`) |
 | Bring it back | click the pill |
-| Quit | click **×**, or `taskflow quit` |
+| Quit | click **×**, or `floatask quit` |
 | Move | drag the panel's title bar, or drag the pill anywhere |
 | Resize | drag the panel's bottom-right corner |
 | Edit a task | double-click it. Right-click for priority, due date, group, delete |
@@ -124,17 +124,17 @@ Closing the app never loses a running timer. It carries on when you reopen.
 ### Terminal
 
 ```text
-taskflow                          open the panel
-taskflow list                     show open tasks, numbered
-taskflow add "Call printer" --due tomorrow --priority high
-taskflow add "Hero section" --under 1        add a subtask to task 1
-taskflow done 3                   complete task 3   (taskflow undo 3 reopens it)
-taskflow focus 1 25               25-minute focus session on task 1
-taskflow pause | resume | stop
-taskflow status | history
-taskflow ask "Break task 1 into steps"
-taskflow config "/path/to/vault"  choose the vault
-taskflow help
+floatask                          open the panel
+floatask list                     show open tasks, numbered
+floatask add "Call printer" --due tomorrow --priority high
+floatask add "Hero section" --under 1        add a subtask to task 1
+floatask done 3                   complete task 3   (floatask undo 3 reopens it)
+floatask focus 1 25               25-minute focus session on task 1
+floatask pause | resume | stop
+floatask status | history
+floatask ask "Break task 1 into steps"
+floatask config "/path/to/vault"  choose the vault
+floatask help
 ```
 
 ## Your data
@@ -174,16 +174,16 @@ There's no telemetry and no account.
 
 ## Troubleshooting
 
-- **"taskflow: command not found".** Open a new Terminal window. The installer added
+- **"floatask: command not found".** Open a new Terminal window. The installer added
   `~/.local/bin` to your PATH.
 - **macOS says the app "can't be opened".** Use **System Settings → Privacy & Security → Open
   Anyway**. Or install with the Terminal command above, which avoids this.
 - **The assistant says it's unavailable.** Turn on Apple Intelligence in **System Settings → Apple
-  Intelligence & Siri**, or add a Claude API key in Taskflow's Settings.
-- **Something looks wrong with your tasks.** Check `~/Library/Logs/Taskflow.log`. Backups of your
+  Intelligence & Siri**, or add a Claude API key in Floatask's Settings.
+- **Something looks wrong with your tasks.** Check `~/Library/Logs/Floatask.log`. Backups of your
   files are in `Task Manager/.backups/` in your vault.
 
-Found a bug or have an idea? [Open an issue](https://github.com/shihab-abir/Work-Management-App/issues).
+Found a bug or have an idea? [Open an issue](https://github.com/shihab-abir/Floatask/issues).
 
 ## Contributing
 

@@ -1,4 +1,4 @@
-// Draws the Taskflow app icon (1024×1024 PNG). Used by scripts/make-icon.sh.
+// Draws the Floatask app icon (1024×1024 PNG). Used by scripts/make-icon.sh.
 //   swift scripts/make-icon.swift <output.png>
 import AppKit
 

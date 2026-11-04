@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Taskflow are documented here. The format is based on
+All notable changes to Floatask are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
@@ -27,7 +27,7 @@ First public release.
   the app and the CLI.
 - Crash and restart recovery: the timer is stored as timestamps. Sessions that finish while the app
   is closed are recorded on the next launch.
-- `taskflow` command: open, hide, quit, list, add, done/undo, rm, focus, pause/resume/stop,
+- `floatask` command: open, hide, quit, list, add, done/undo, rm, focus, pause/resume/stop,
   status, history, ask, config, version.
 - Optional AI assistant. It runs on Apple Intelligence's on-device model by default, with Claude
   available via an API key stored in the Keychain. Every change it proposes is validated and
@@ -36,5 +36,5 @@ First public release.
 - Light/dark/system theme, opacity setting, keyboard shortcuts and VoiceOver labels.
 - One-line installer and uninstaller. GitHub Actions CI and automated releases.
 
-[Unreleased]: https://github.com/shihab-abir/Work-Management-App/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/shihab-abir/Work-Management-App/releases/tag/v0.1.0
+[Unreleased]: https://github.com/shihab-abir/Floatask/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/shihab-abir/Floatask/releases/tag/v0.1.0

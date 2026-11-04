@@ -1,20 +1,20 @@
 #!/bin/bash
-# Taskflow installer.
+# Floatask installer.
 #
 #   Install the latest release:
-#     curl -fsSL https://raw.githubusercontent.com/shihab-abir/Work-Management-App/main/install.sh | bash
+#     curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/install.sh | bash
 #
 #   Options (pass after `bash -s --` when piping, or directly when running a local copy):
 #     --version v0.1.0   install a specific release
 #     --from-source      build from source instead of downloading (needs Xcode Command Line Tools)
-#     --no-open          don't launch Taskflow when done
+#     --no-open          don't launch Floatask when done
 #
-# Installs:  ~/Applications/Taskflow.app   and the `taskflow` command in ~/.local/bin
+# Installs:  ~/Applications/Floatask.app   and the `floatask` command in ~/.local/bin
 set -euo pipefail
 
-REPO="shihab-abir/Work-Management-App"
+REPO="shihab-abir/Floatask"
 APP_DIR="$HOME/Applications"
-APP="$APP_DIR/Taskflow.app"
+APP="$APP_DIR/Floatask.app"
 BIN_DIR="$HOME/.local/bin"
 VERSION=""
 FROM_SOURCE=0
@@ -35,15 +35,15 @@ step() { printf '\033[32m→\033[0m %s\n' "$*"; }
 die()  { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 # --- Requirements -----------------------------------------------------------
-[[ "$(uname -s)" == "Darwin" ]] || die "Taskflow is a macOS app."
-[[ "$(uname -m)" == "arm64" ]] || die "Taskflow needs a Mac with Apple silicon (M1 or newer)."
+[[ "$(uname -s)" == "Darwin" ]] || die "Floatask is a macOS app."
+[[ "$(uname -m)" == "arm64" ]] || die "Floatask needs a Mac with Apple silicon (M1 or newer)."
 MACOS_MAJOR="$(sw_vers -productVersion | cut -d. -f1)"
-(( MACOS_MAJOR >= 26 )) || die "Taskflow needs macOS 26 or newer (you have $(sw_vers -productVersion))."
+(( MACOS_MAJOR >= 26 )) || die "Floatask needs macOS 26 or newer (you have $(sw_vers -productVersion))."
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# --- Get Taskflow.app ---------------------------------------------------------
+# --- Get Floatask.app ---------------------------------------------------------
 build_from_source() {
   xcode-select -p >/dev/null 2>&1 || {
     xcode-select --install >/dev/null 2>&1 || true
@@ -52,7 +52,7 @@ build_from_source() {
   local src
   local here
   here="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || true)"
-  if [[ -n "$here" && -d "$here/Sources/TaskflowCore" ]]; then
+  if [[ -n "$here" && -d "$here/Sources/FloataskCore" ]]; then
     src="$here"                       # running from a checkout
   else
     step "Downloading source"
@@ -61,7 +61,7 @@ build_from_source() {
   fi
   step "Building (takes a minute or two)"
   (cd "$src" && scripts/build.sh >/dev/null)
-  BUILT="$src/build/Taskflow.app"
+  BUILT="$src/build/Floatask.app"
 }
 
 download_release() {
@@ -71,19 +71,19 @@ download_release() {
   url="$(curl -fsSL "$api" 2>/dev/null | grep -o '"browser_download_url": *"[^"]*macos-arm64\.zip"' | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')" || true
   [[ -n "$url" ]] || return 1
   step "Downloading $(basename "$url")"
-  curl -fL --progress-bar "$url" -o "$WORK/Taskflow.zip" || return 1
-  if curl -fsSL "$url.sha256" -o "$WORK/Taskflow.zip.sha256" 2>/dev/null; then
+  curl -fL --progress-bar "$url" -o "$WORK/Floatask.zip" || return 1
+  if curl -fsSL "$url.sha256" -o "$WORK/Floatask.zip.sha256" 2>/dev/null; then
     local expected actual
-    expected="$(awk '{print $1}' "$WORK/Taskflow.zip.sha256")"
-    actual="$(shasum -a 256 "$WORK/Taskflow.zip" | awk '{print $1}')"
+    expected="$(awk '{print $1}' "$WORK/Floatask.zip.sha256")"
+    actual="$(shasum -a 256 "$WORK/Floatask.zip" | awk '{print $1}')"
     [[ "$expected" == "$actual" ]] || die "Download checksum mismatch — please try again."
   fi
-  ditto -x -k "$WORK/Taskflow.zip" "$WORK/unpacked"
-  BUILT="$WORK/unpacked/Taskflow.app"
+  ditto -x -k "$WORK/Floatask.zip" "$WORK/unpacked"
+  BUILT="$WORK/unpacked/Floatask.app"
   [[ -d "$BUILT" ]]
 }
 
-bold "Installing Taskflow"
+bold "Installing Floatask"
 if (( FROM_SOURCE )); then
   build_from_source
 elif ! download_release; then
@@ -92,11 +92,11 @@ elif ! download_release; then
 fi
 
 # --- Install -----------------------------------------------------------------
-if pgrep -xq Taskflow; then
+if pgrep -xq Floatask; then
   step "Closing the running copy"
-  "$APP/Contents/MacOS/taskflow-cli" quit >/dev/null 2>&1 || osascript -e 'quit app "Taskflow"' >/dev/null 2>&1 || true
+  "$APP/Contents/MacOS/floatask-cli" quit >/dev/null 2>&1 || osascript -e 'quit app "Floatask"' >/dev/null 2>&1 || true
   sleep 1
-  pkill -x Taskflow 2>/dev/null || true
+  pkill -x Floatask 2>/dev/null || true
 fi
 
 mkdir -p "$APP_DIR" "$BIN_DIR"
@@ -105,9 +105,9 @@ ditto "$BUILT" "$APP"
 # Not notarized (no paid Apple Developer ID yet): clear the download flag so macOS lets it open.
 xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$APP" >/dev/null 2>&1 || true
-ln -sf "$APP/Contents/MacOS/taskflow-cli" "$BIN_DIR/taskflow"
+ln -sf "$APP/Contents/MacOS/floatask-cli" "$BIN_DIR/floatask"
 step "Installed $APP"
-step "Installed the taskflow command in $BIN_DIR"
+step "Installed the floatask command in $BIN_DIR"
 
 # Make sure ~/.local/bin is on PATH for new terminal windows.
 case ":$PATH:" in
@@ -116,7 +116,7 @@ case ":$PATH:" in
     PROFILE="$HOME/.zprofile"
     [[ "${SHELL:-}" == */bash ]] && PROFILE="$HOME/.bash_profile"
     if ! grep -qs '.local/bin' "$PROFILE"; then
-      printf '\n# Added by the Taskflow installer\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$PROFILE"
+      printf '\n# Added by the Floatask installer\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$PROFILE"
       step "Added ~/.local/bin to your PATH in $PROFILE (open a new Terminal window to use it)"
     fi
     ;;
@@ -124,9 +124,9 @@ esac
 
 echo
 bold "Done!"
-echo "  Open the panel:   taskflow"
-echo "  Close it:         taskflow quit"
-echo "  All commands:     taskflow help"
+echo "  Open the panel:   floatask"
+echo "  Close it:         floatask quit"
+echo "  All commands:     floatask help"
 echo
 echo "On first launch, choose your Obsidian vault (or any folder) — tasks are saved there as Markdown."
 
