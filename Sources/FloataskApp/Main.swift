@@ -152,6 +152,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 case "picker": model.route = .picker
                 default: model.route = .tasks
                 }
+            case let c where c.hasPrefix("view:"):
+                if let v = ListView(rawValue: String(c.dropFirst(5))) { model.route = .tasks; model.setListView(v) }
             case "snapshot": writeSnapshots()
             default: break
             }
@@ -276,6 +278,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "n": model.route = .tasks; model.addingUnder = nil; model.focusAddField += 1; return true
             case ",": model.route = model.route == .settings ? .tasks : .settings; return true
             case "m", "w": minimize(); return true
+            case "1", "2", "3":
+                model.route = .tasks
+                model.setListView(ListView.allCases[Int(key)! - 1])
+                return true
             case "c", "v", "x", "a", "z":
                 let sel: Selector = ["c": #selector(NSText.copy(_:)), "v": #selector(NSText.paste(_:)),
                                      "x": #selector(NSText.cut(_:)), "a": #selector(NSText.selectAll(_:)),
@@ -296,9 +302,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if model.route == .tasks && !editingText && model.addingUnder == nil { panel.resignKeyAndReturn(); return true }
             return false
         }
+        // ⌥↑ / ⌥↓ moves the highlighted task within "Up next".
+        if mods == .option, model.route == .tasks, model.listView == .upNext, !editingText, e.keyCode == 125 || e.keyCode == 126,
+           let id = model.highlightedId, model.snapshot.task(id)?.depth == 0 {
+            model.moveTask(id, by: e.keyCode == 125 ? 1 : -1)
+            return true
+        }
         // List navigation when not typing.
         guard model.route == .tasks, !editingText, mods.isDisjoint(with: [.command, .option, .control]) else { return false }
-        let list = model.visibleTasks.filter { t in !(t.group.map { model.collapsedGroups.contains($0) } ?? false) }
+        let list = model.displayedTasks
         switch e.keyCode {
         case 125, 126:   // ↓ ↑
             guard !list.isEmpty else { return false }

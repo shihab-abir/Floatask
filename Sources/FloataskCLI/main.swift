@@ -65,7 +65,31 @@ func openApp() {
 
 // MARK: Resolving "3" or "t_20260930_ab12" to a task
 
-func visibleNumbered(_ s: TaskService) -> [TaskItem] { s.snapshot.visibleTasks() }
+/// The list arrangement chosen in the app (Up next / Groups / Priority); the CLI numbers tasks the same way.
+var listView: ListView { LocalConfig.load().listView.flatMap(ListView.init(rawValue:)) ?? .groups }
+
+func visibleNumbered(_ s: TaskService) -> [TaskItem] {
+    let visible = s.snapshot.visibleTasks()
+    switch listView {
+    case .groups: return visible
+    case .upNext: return Snapshot.upNext(visible)
+    case .priority:
+        let ordered = Snapshot.upNext(visible)
+        let rootPriority = priorityOfRoot(ordered)
+        return [Priority.high, .medium, .low, nil].flatMap { p in ordered.filter { rootPriority[$0.id]! == p } }
+    }
+}
+
+/// Each task's top-level task priority (subtasks are listed with their parent).
+func priorityOfRoot(_ ordered: [TaskItem]) -> [String: Priority?] {
+    var map: [String: Priority?] = [:]
+    var current: Priority?
+    for t in ordered {
+        if t.depth == 0 { current = t.priority }
+        map[t.id] = .some(current)
+    }
+    return map
+}
 
 func resolve(_ ref: String, in s: TaskService) -> TaskItem {
     let list = visibleNumbered(s)
@@ -93,11 +117,20 @@ func printList(_ s: TaskService) {
     print("")
     let focus = s.snapshot.focusSeconds
     let width = String(list.count).count
-    var lastGroup: String?? = .none
+    let view = listView
+    let rootPriority = priorityOfRoot(list)
+    var lastHeader: String?? = .none
     for (i, t) in list.enumerated() {
-        if t.depth == 0, lastGroup != .some(t.group) {
-            if let g = t.group { print(""); print(dim(g.uppercased())) }
-            lastGroup = .some(t.group)
+        if t.depth == 0 {
+            let header: String? = switch view {
+            case .groups: t.group
+            case .priority: rootPriority[t.id]!.map { $0.rawValue.capitalized } ?? "No priority"
+            case .upNext: nil
+            }
+            if lastHeader != .some(header) {
+                if let header { print(""); print(dim(header.uppercased())) }
+                lastHeader = .some(header)
+            }
         }
         let num = String(repeating: " ", count: width - String(i + 1).count) + "\(i + 1)"
         let box = t.isDone ? green("☑") : "☐"
@@ -160,6 +193,7 @@ func usage() {
       floatask add "Title" [--due tomorrow|2026-10-02] [--group Name] [--priority high|medium|low] [--under N]
       floatask done N          complete task number N          (undo N reopens it)
       floatask rm N            delete task N (asks first)
+      floatask move N top|up|down|bottom|POS   change where task N sits in "Up next"
 
     \(bold("Focus"))
       floatask focus N [MIN]   start a focus session on task N (default length from settings)
@@ -287,6 +321,28 @@ case "done", "check", "undo", "uncheck":
         print(green("✓") + (done ? " Completed" : " Reopened") + " “\(t.title)”")
         let p = s.snapshot.progress()
         if p.total > 0 { print(dim("\(p.done)/\(p.total) done · \(percent(p))%")) }
+    }
+
+case "move", "mv":
+    guard args.count >= 2 else { fail("usage: floatask move N top|up|down|bottom|POSITION") }
+    let s = service()
+    let t = resolve(args[0], in: s)
+    guard t.depth == 0 else { fail("subtasks move with their parent task.") }
+    let roots = Snapshot.upNext(s.snapshot.visibleTasks()).filter { $0.depth == 0 }.map(\.id)
+    let current = roots.firstIndex(of: t.id) ?? 0
+    let target: Int
+    switch args[1].lowercased() {
+    case "top", "first": target = 0
+    case "bottom", "last": target = roots.count - 1
+    case "up": target = max(0, current - 1)
+    case "down": target = min(roots.count - 1, current + 1)
+    default:
+        guard let n = Int(args[1]), n >= 1 else { fail("position must be top, up, down, bottom or a number") }
+        target = min(n, roots.count) - 1
+    }
+    run {
+        try s.move(t.id, to: target)
+        print(green("✓") + " “\(t.title)” is now #\(target + 1) of \(roots.count) in Up next")
     }
 
 case "rm", "delete":

@@ -1,5 +1,20 @@
 import Foundation
 
+/// How the task list is arranged. Stored per machine in LocalConfig.
+public enum ListView: String, CaseIterable, Codable, Sendable {
+    case upNext = "up_next"    // the user's own sequence, set by dragging
+    case groups
+    case priority
+
+    public var title: String {
+        switch self {
+        case .upNext: return "Up next"
+        case .groups: return "Groups"
+        case .priority: return "Priority"
+        }
+    }
+}
+
 public enum Priority: String, CaseIterable, Codable, Sendable {
     case high, medium, low
 
@@ -27,11 +42,12 @@ public struct TaskItem: Identifiable, Equatable, Sendable {
     public var parentId: String?
     public var depth: Int
     public var hasPersistedId: Bool
+    public var order: Int?             // position in the "Up next" list (top-level tasks only)
 
     public init(id: String, title: String, notes: String = "", isDone: Bool = false,
                 priority: Priority? = nil, due: String? = nil, tags: [String] = [],
                 group: String? = nil, createdAt: Date? = nil, completedAt: Date? = nil,
-                parentId: String? = nil, depth: Int = 0, hasPersistedId: Bool = true) {
+                parentId: String? = nil, depth: Int = 0, hasPersistedId: Bool = true, order: Int? = nil) {
         self.id = id
         self.title = title
         self.notes = notes
@@ -45,6 +61,7 @@ public struct TaskItem: Identifiable, Equatable, Sendable {
         self.parentId = parentId
         self.depth = depth
         self.hasPersistedId = hasPersistedId
+        self.order = order
     }
 }
 

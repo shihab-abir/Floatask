@@ -65,6 +65,7 @@ public struct LocalConfig: Codable, Equatable {
     public var selectedTaskId: String?
     public var pendingMinutes: Int?
     public var collapsedGroups: [String] = []
+    public var listView: String?         // ListView raw value
 
     public init() {}
 

@@ -9,6 +9,7 @@ struct TasksScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     FocusCard()
                     ProgressSection()
+                    ListViewTabs()
                     TaskList()
                 }
                 .padding(.horizontal, 12)
@@ -190,32 +191,86 @@ struct ProgressSection: View {
 
 // MARK: - List
 
+/// Segmented switch between the three list arrangements (⌘1 / ⌘2 / ⌘3).
+struct ListViewTabs: View {
+    @EnvironmentObject var model: AppModel
+    @Namespace private var selection
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(Array(ListView.allCases.enumerated()), id: \.element) { i, v in
+                let selected = model.listView == v
+                Button {
+                    withAnimation(.easeOut(duration: 0.18)) { model.setListView(v) }
+                } label: {
+                    Text(v.title)
+                        .font(.system(size: 11.5, weight: selected ? .semibold : .medium))
+                        .foregroundStyle(selected ? Theme.text : Theme.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                        .background {
+                            if selected {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Theme.surface)
+                                    .shadow(color: .black.opacity(0.06), radius: 1, y: 0.5)
+                                    .matchedGeometryEffect(id: "tab", in: selection)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(help(v) + " (⌘\(i + 1))")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(2)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.surfaceHover))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Arrange tasks")
+    }
+
+    private func help(_ v: ListView) -> String {
+        switch v {
+        case .upNext: return "The order you'll work in — drag tasks to rearrange"
+        case .groups: return "Tasks by group"
+        case .priority: return "Tasks by priority"
+        }
+    }
+}
+
 struct TaskList: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
-        let tasks = model.visibleTasks
+        let sections = model.sections
         VStack(alignment: .leading, spacing: 1) {
-            if tasks.isEmpty {
+            if sections.isEmpty || sections.allSatisfy({ $0.tasks.isEmpty }) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No tasks yet.").font(.system(size: 13, weight: .medium))
                     Text("Add your first task below.").font(.system(size: 12)).foregroundStyle(Theme.secondary)
                 }
                 .padding(.vertical, 8)
-            }
-            ForEach(sections(tasks), id: \.key) { section in
-                if let g = section.group {
-                    groupHeader(g, count: section.tasks.filter { !$0.isDone }.count)
-                }
-                if !(section.group.map { model.collapsedGroups.contains($0) } ?? false) {
-                    ForEach(section.tasks) { t in
-                        TaskRow(task: t).id(t.id)
-                        if model.addingUnder == t.id {
-                            AddTaskField(parentId: t.id, placeholder: "Add subtask", depth: t.depth + 1)
+            } else if model.listView == .upNext {
+                UpNextList(tasks: sections[0].tasks)
+            } else {
+                ForEach(sections) { section in
+                    if model.listView == .groups {
+                        if let g = section.title {
+                            GroupHeader(group: g, count: section.tasks.filter { !$0.isDone }.count)
                         }
+                    } else if let title = section.title {
+                        SectionHeader(title: title, count: section.tasks.filter { !$0.isDone }.count)
                     }
-                    if let g = section.group, model.addingGroup == g {
-                        AddTaskField(group: g, placeholder: "Add to \(g)", autofocus: true)
+                    if !(model.listView == .groups && section.title.map { model.collapsedGroups.contains($0) } ?? false) {
+                        ForEach(section.tasks) { t in
+                            TaskRow(task: t).id(t.id)
+                            if model.addingUnder == t.id {
+                                AddTaskField(parentId: t.id, placeholder: "Add subtask", depth: t.depth + 1)
+                            }
+                        }
+                        if model.listView == .groups, let g = section.title, model.addingGroup == g {
+                            AddTaskField(group: g, placeholder: "Add to \(g)", autofocus: true)
+                        }
                     }
                 }
             }
@@ -223,22 +278,115 @@ struct TaskList: View {
                 .padding(.top, 4)
         }
     }
+}
 
-    struct Section { let key: String; let group: String?; let tasks: [TaskItem] }
+/// "Up next": the user's own sequence. Top-level tasks (with their subtasks) are dragged to reorder;
+/// the list previews the new position while dragging and saves once on drop.
+struct UpNextList: View {
+    @EnvironmentObject var model: AppModel
+    let tasks: [TaskItem]
+    @ViewState private var dragging: String?
+    @ViewState private var draft: [String]?          // root ids in preview order while dragging
+    private let mouseCheck = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
-    private func sections(_ tasks: [TaskItem]) -> [Section] {
-        var order: [String?] = []
-        var map: [String: [TaskItem]] = [:]
+    private var chunks: [[TaskItem]] {
+        var result: [[TaskItem]] = []
         for t in tasks {
-            let key = t.group ?? ""
-            if map[key] == nil { order.append(t.group); map[key] = [] }
-            map[key]!.append(t)
+            if t.depth == 0 || result.isEmpty { result.append([t]) } else { result[result.count - 1].append(t) }
         }
-        return order.map { Section(key: $0 ?? "", group: $0, tasks: map[$0 ?? ""]!) }
+        guard let draft else { return result }
+        let byRoot = Dictionary(uniqueKeysWithValues: result.map { ($0[0].id, $0) })
+        return draft.compactMap { byRoot[$0] }
     }
 
-    private func groupHeader(_ g: String, count: Int) -> some View {
-        GroupHeader(group: g, count: count)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if !tasks.contains(where: { $0.order != nil }) && tasks.filter({ $0.depth == 0 }).count > 1 {
+                Text("Drag tasks into the order you'll do them.")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(Theme.tertiary)
+                    .padding(.horizontal, 6)
+                    .padding(.bottom, 4)
+            }
+            ForEach(chunks, id: \.[0].id) { chunk in
+                let root = chunk[0].id
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(chunk) { t in
+                        TaskRow(task: t, reorderable: t.depth == 0).id(t.id)
+                        if model.addingUnder == t.id {
+                            AddTaskField(parentId: t.id, placeholder: "Add subtask", depth: t.depth + 1)
+                        }
+                    }
+                }
+                .opacity(dragging == root ? 0.35 : 1)
+                .onDrag {
+                    dragging = root
+                    draft = chunks.map { $0[0].id }
+                    return NSItemProvider(object: root as NSString)
+                }
+                .onDrop(of: [.text], delegate: ReorderDropDelegate(target: root, dragging: $dragging, draft: $draft, commit: commit))
+            }
+        }
+        // Dropping in the gaps between rows still counts.
+        .onDrop(of: [.text], delegate: ReorderDropDelegate(target: nil, dragging: $dragging, draft: $draft, commit: commit))
+        .onReceive(mouseCheck) { _ in
+            // Released outside the list: put everything back.
+            if dragging != nil && NSEvent.pressedMouseButtons & 1 == 0 {
+                withAnimation(.easeOut(duration: 0.15)) { dragging = nil; draft = nil }
+            }
+        }
+    }
+
+    private func commit() {
+        guard let ids = draft else { return }
+        let before = tasks.filter { $0.depth == 0 }.map(\.id)
+        if ids != before || !tasks.contains(where: { $0.order != nil }) { model.reorder(ids) }
+        dragging = nil
+        draft = nil
+    }
+}
+
+struct ReorderDropDelegate: DropDelegate {
+    let target: String?
+    @Binding var dragging: String?
+    @Binding var draft: [String]?
+    let commit: () -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let target, let d = dragging, d != target, var ids = draft,
+              let from = ids.firstIndex(of: d), let to = ids.firstIndex(of: target) else { return }
+        ids.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+        withAnimation(.easeOut(duration: 0.18)) { draft = ids }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: dragging == nil ? .forbidden : .move)
+    }
+
+    func validateDrop(info: DropInfo) -> Bool { dragging != nil }
+
+    func performDrop(info: DropInfo) -> Bool {
+        commit()
+        return true
+    }
+}
+
+/// Plain header for priority sections (not collapsible).
+struct SectionHeader: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Theme.label(title)
+            if count > 0 { Text("\(count)").font(.system(size: 10.5)).foregroundStyle(Theme.tertiary) }
+            Spacer()
+        }
+        .frame(height: 22)
+        .padding(.leading, 6)
+        .padding(.top, 8)
+        .padding(.bottom, 1)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -285,6 +433,7 @@ struct GroupHeader: View {
 struct TaskRow: View {
     @EnvironmentObject var model: AppModel
     let task: TaskItem
+    var reorderable = false
     @ViewState private var hover = false
 
     private var isFocus: Bool { model.focusTask?.id == task.id }
@@ -308,6 +457,14 @@ struct TaskRow: View {
                 if let meta = metaLine { meta }
             }
             Spacer(minLength: 4)
+            if reorderable && hover {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(Theme.tertiary)
+                    .help("Drag to reorder · ⌥↑ / ⌥↓")
+                    .alignmentGuide(.firstTextBaseline) { d in d[VerticalAlignment.center] + 4.5 }
+                    .accessibilityHidden(true)
+            }
             if (hover || isHighlighted) && !task.isDone {
                 IconButton(symbol: "scope", help: isFocus ? "Current focus task" : "Focus on this task (F)", size: 12,
                            tint: isFocus ? Theme.focus : Theme.tertiary) {
@@ -397,6 +554,14 @@ struct TaskMenu: View {
         Button("Edit…") { model.route = .edit(task.id) }
         Button("Add subtask") { model.addingUnder = task.id }
         Button("Duplicate") { model.duplicate(task.id) }
+        if task.depth == 0 {
+            Menu("Up next") {
+                Button("Move to top") { model.moveTask(task.id, by: Int.min) }
+                Button("Move up") { model.moveTask(task.id, by: -1) }
+                Button("Move down") { model.moveTask(task.id, by: 1) }
+                Button("Move to bottom") { model.moveTask(task.id, by: Int.max) }
+            }
+        }
         Menu("Priority") {
             ForEach([Priority.high, .medium, .low], id: \.self) { p in
                 Button(p.rawValue.capitalized) { model.update(task.id, TaskPatch(priority: .some(p))) }

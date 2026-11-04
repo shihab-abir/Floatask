@@ -326,7 +326,8 @@ public struct TasksDocument {
                     priority: t.priority, due: t.due, tags: t.tags,
                     group: t.metaValue("group") ?? group,
                     createdAt: t.createdAt, completedAt: t.completedAt,
-                    parentId: stack.last?.id, depth: stack.count, hasPersistedId: t.hasPersistedId))
+                    parentId: stack.last?.id, depth: stack.count, hasPersistedId: t.hasPersistedId,
+                    order: t.metaValue("order").flatMap { Int($0) }))
                 stack.append((t.indentWidth, t.id))
             case .other(let s):
                 // A blank line or paragraph at column 0 ends any nesting.

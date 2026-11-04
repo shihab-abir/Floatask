@@ -45,6 +45,8 @@ type: task_manager_tasks
 - **Hidden fields** go in the trailing HTML comment, which Obsidian doesn't render:
   - `id` is stable and never reused.
   - `created` and `done` are ISO-8601 timestamps.
+  - `order` is a top-level task's position in the **Up next** list (1 = first). Tasks without one
+    come after the ordered tasks, in file order. Subtasks always stay with their parent.
   - Values are percent-encoded (spaces become `%20`).
 - **Tasks you type in Obsidian** don't need an id. Floatask adds one the next time it saves the file.
   If you tick a box in Obsidian, Floatask adds the `done:` time about 3 seconds later.

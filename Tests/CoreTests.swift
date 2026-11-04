@@ -224,6 +224,43 @@ struct TestMain {
             check(NaturalDate.find(in: "plain task", now: wed) == nil, "none")
         }
 
+        test("up next: order key, file-order fallback, subtasks stay with parent") {
+            let text = """
+            - [ ] A <!-- id:t_a -->
+            	- [ ] A1 <!-- id:t_a1 -->
+            - [ ] B <!-- id:t_b order:2 -->
+
+            ## Work
+
+            - [ ] C <!-- id:t_c order:1 -->
+            - [ ] D <!-- id:t_d -->
+            """
+            let items = TasksDocument.parse(text).items()
+            check(items.first { $0.id == "t_c" }?.order == 1, "order parsed")
+            check(Snapshot.upNext(items).map(\.id) == ["t_c", "t_b", "t_a", "t_a1", "t_d"], "up next order: \(Snapshot.upNext(items).map(\.id))")
+        }
+
+        test("reorder and move write order keys; new tasks join the end") {
+            let layout = tempVault()
+            let svc = try TaskService(layout: layout)
+            let a = try svc.addTask(title: "A")
+            let b = try svc.addTask(title: "B", group: "Work")
+            let c = try svc.addTask(title: "C")
+            let sub = try svc.addTask(title: "A sub", parentId: a)
+            check(Snapshot.upNext(svc.snapshot.tasks).map(\.id) == [a, sub, c, b], "file order before arranging")
+            try svc.reorder([b, a])
+            check(Snapshot.upNext(svc.snapshot.tasks).map(\.id) == [b, a, sub, c], "reordered, unlisted kept after")
+            check(svc.snapshot.task(c)?.order == 3 && svc.snapshot.task(sub)?.order == nil, "orders stored on top-level only")
+            try svc.move(c, to: 0)
+            check(Snapshot.upNext(svc.snapshot.tasks).filter { $0.depth == 0 }.map(\.id) == [c, b, a], "moved to top")
+            let d = try svc.addTask(title: "D", group: "Work")
+            check(Snapshot.upNext(svc.snapshot.tasks).last?.id == d, "new task at the end of up next")
+            check(svc.snapshot.nextTask()?.id == c, "next task follows up next")
+            do { try svc.move(sub, to: 0); check(false, "moving a subtask should throw") } catch {}
+            let text = try String(contentsOf: layout.tasks, encoding: .utf8)
+            check(text.contains("order:1"), "order saved in the id comment")
+        }
+
         testAI()
 
         print("\n\(passes) passed, \(failures) failed")

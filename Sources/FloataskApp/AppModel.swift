@@ -11,6 +11,13 @@ enum Route: Equatable {
     case picker
 }
 
+/// A titled run of tasks in the list (a group, a priority level, or the whole "Up next" sequence).
+struct TaskSection: Identifiable {
+    let id: String
+    let title: String?
+    let tasks: [TaskItem]
+}
+
 struct Banner: Equatable {
     var message: String
     var detail: String?
@@ -31,6 +38,7 @@ final class AppModel: ObservableObject {
     @Published var pendingDelete: String?
     @Published var needsVault = false
     @Published var collapsedGroups: Set<String> = []
+    @Published var listView: ListView = .groups
     @Published var addingUnder: String?              // parent id while adding a subtask inline
     @Published var addingGroup: String?              // group name while adding into a group
     @Published var justCompleted: FocusSession?      // shown briefly after a timer finishes
@@ -49,6 +57,7 @@ final class AppModel: ObservableObject {
     init() {
         focusTaskId = config.selectedTaskId
         collapsedGroups = Set(config.collapsedGroups)
+        listView = config.listView.flatMap(ListView.init(rawValue:)) ?? .groups
         connect()
         ticker = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
@@ -169,6 +178,49 @@ final class AppModel: ObservableObject {
         return seen
     }
 
+    /// The list as currently arranged by `listView`.
+    var sections: [TaskSection] {
+        let visible = visibleTasks
+        switch listView {
+        case .upNext:
+            return [TaskSection(id: "up-next", title: nil, tasks: Snapshot.upNext(visible))]
+        case .groups:
+            var order: [String?] = []
+            var map: [String: [TaskItem]] = [:]
+            for t in visible {
+                let key = t.group ?? ""
+                if map[key] == nil { order.append(t.group); map[key] = [] }
+                map[key]!.append(t)
+            }
+            return order.map { TaskSection(id: "group:" + ($0 ?? ""), title: $0, tasks: map[$0 ?? ""]!) }
+        case .priority:
+            // Bucket whole subtrees by their top-level task's priority, keeping "Up next" order inside.
+            var buckets: [Priority?: [TaskItem]] = [:]
+            var current: Priority?? = .none
+            for t in Snapshot.upNext(visible) {
+                if t.depth == 0 || current == nil { current = .some(t.priority) }
+                buckets[current!, default: []].append(t)
+            }
+            let levels: [(Priority?, String)] = [(.high, "High"), (.medium, "Medium"), (.low, "Low"), (nil, "No priority")]
+            return levels.compactMap { p, title in
+                buckets[p].map { TaskSection(id: "priority:" + (p?.rawValue ?? "none"), title: title, tasks: $0) }
+            }
+        }
+    }
+
+    /// Tasks in on-screen order, skipping collapsed groups (for keyboard navigation).
+    var displayedTasks: [TaskItem] {
+        sections.flatMap { s in
+            listView == .groups && s.title.map { collapsedGroups.contains($0) } == true ? [] : s.tasks
+        }
+    }
+
+    func setListView(_ v: ListView) {
+        listView = v
+        config.listView = v.rawValue
+        try? config.save()
+    }
+
     func focusSeconds(for id: String) -> Int {
         var s = snapshot.focusSeconds[id] ?? 0
         if let a = active, a.taskId == id { s += a.elapsedSeconds(at: now) }
@@ -210,6 +262,22 @@ final class AppModel: ObservableObject {
     func duplicate(_ id: String) {
         guard let service else { return }
         run { try service.duplicateTask(id) }
+    }
+
+    /// Saves a new "Up next" sequence of top-level task ids.
+    func reorder(_ ids: [String]) {
+        guard let service else { return }
+        run { try service.reorder(ids) }
+    }
+
+    /// Moves a top-level task within "Up next": -1 up, +1 down, Int.min to the top, Int.max to the bottom.
+    func moveTask(_ id: String, by offset: Int) {
+        guard let service else { return }
+        let roots = snapshot.upNextTasks(now: now).filter { $0.depth == 0 }.map(\.id)
+        guard let i = roots.firstIndex(of: id) else { return }
+        let target = offset == Int.min ? 0 : offset == Int.max ? roots.count - 1 : max(0, min(roots.count - 1, i + offset))
+        guard target != i else { return }
+        run { try service.move(id, to: target) }
     }
 
     func toggleGroup(_ g: String) {

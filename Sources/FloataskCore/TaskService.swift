@@ -40,9 +40,27 @@ public struct Snapshot {
         return (v.filter(\.isDone).count, v.count)
     }
 
-    /// The task to suggest next: the first open leaf task in list order.
+    /// Arranges tasks (given in file order) into the "Up next" sequence: top-level tasks with an
+    /// `order:` come first by that number, then the rest in file order. Subtasks stay under their parent.
+    public static func upNext(_ tasks: [TaskItem]) -> [TaskItem] {
+        var chunks: [[TaskItem]] = []
+        for t in tasks {
+            if t.depth == 0 || chunks.isEmpty { chunks.append([t]) } else { chunks[chunks.count - 1].append(t) }
+        }
+        return chunks.enumerated()
+            .sorted { a, b in
+                let x = a.element[0].order ?? Int.max, y = b.element[0].order ?? Int.max
+                return x != y ? x < y : a.offset < b.offset
+            }
+            .flatMap(\.element)
+    }
+
+    /// Visible tasks in "Up next" order.
+    public func upNextTasks(now: Date = Date()) -> [TaskItem] { Snapshot.upNext(visibleTasks(now: now)) }
+
+    /// The task to suggest next: the first open leaf task in "Up next" order.
     public func nextTask(now: Date = Date()) -> TaskItem? {
-        let v = visibleTasks(now: now)
+        let v = upNextTasks(now: now)
         let parents = Set(v.compactMap { $0.isDone ? nil : $0.parentId })
         return v.first { !$0.isDone && !parents.contains($0.id) }
     }
@@ -240,6 +258,8 @@ public final class TaskService {
             var line = TaskLine(id: newId, title: clean, due: due, priority: priority)
             line.setTags(tags)
             line.setMeta("created", Dates.iso(now))
+            // Once the user has arranged "Up next", new top-level tasks join at the end of it.
+            if parent == nil, let last = doc.items().compactMap(\.order).max() { line.setMeta("order", String(last + 1)) }
             if !notes.isEmpty { line.setNotes(notes) }
             let g = group.map(TaskLine.clean).flatMap { $0.isEmpty ? nil : $0 }
             doc.insert(line, group: g, parentId: parent)
@@ -307,6 +327,29 @@ public final class TaskService {
                 }
             }
         }
+    }
+
+    /// Saves the "Up next" sequence: `ids` are top-level tasks, first to last. Top-level tasks not
+    /// listed keep their relative position after the listed ones.
+    public func reorder(_ ids: [String], now: Date = Date()) throws {
+        try mutateTasks(now: now) { doc in
+            let roots = Snapshot.upNext(doc.items()).filter { $0.depth == 0 }.map(\.id)
+            let listed = ids.filter { id in roots.contains(id) }
+            let sequence = listed + roots.filter { !listed.contains($0) }
+            for (i, id) in sequence.enumerated() where doc.task(id)?.metaValue("order") != String(i + 1) {
+                _ = doc.modify(id) { $0.setMeta("order", String(i + 1)) }
+            }
+        }
+    }
+
+    /// Moves a top-level task to a 0-based position in the "Up next" sequence of visible tasks.
+    public func move(_ id: String, to position: Int, now: Date = Date()) throws {
+        guard let t = snapshot.task(id) else { throw FloataskError.taskNotFound(id) }
+        guard t.depth == 0 else { throw FloataskError.invalid("Subtasks move with their parent task.") }
+        var roots = snapshot.upNextTasks(now: now).filter { $0.depth == 0 }.map(\.id)
+        roots.removeAll { $0 == id }
+        roots.insert(id, at: min(max(0, position), roots.count))
+        try reorder(roots, now: now)
     }
 
     public func deleteTask(_ id: String) throws {

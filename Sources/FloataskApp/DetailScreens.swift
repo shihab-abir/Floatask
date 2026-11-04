@@ -9,7 +9,7 @@ struct TaskPickerView: View {
     @FocusState private var focused: Bool
 
     private var options: [TaskItem] {
-        let open = model.visibleTasks.filter { !$0.isDone }
+        let open = Snapshot.upNext(model.visibleTasks).filter { !$0.isDone }
         guard !query.isEmpty else { return open }
         return open.filter { $0.title.localizedCaseInsensitiveContains(query) }
     }
