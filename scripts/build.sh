@@ -28,7 +28,7 @@ echo "→ compiling floatask CLI"
   -o "$APP/Contents/MacOS/floatask-cli"
 
 sed "s/__VERSION__/$VERSION/g" Resources/Info.plist > "$APP/Contents/Info.plist"
-cp Resources/AppIcon.icns "$APP/Contents/Resources/"
+cp Resources/AppIcon.icns Resources/LogoFrame.svg Resources/LogoWave.svg "$APP/Contents/Resources/"
 
 # Ad-hoc signature: required to run on Apple silicon; no Apple Developer account needed.
 codesign --force --deep --sign - "$APP" >/dev/null

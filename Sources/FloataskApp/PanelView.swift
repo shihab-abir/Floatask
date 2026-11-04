@@ -49,11 +49,9 @@ struct PanelView: View {
             if model.route != .tasks && !model.needsVault {
                 IconButton(symbol: "chevron.left", help: "Back (Esc)") { model.route = .tasks }
             } else {
-                Circle()
-                    .fill(model.active?.status == .running ? Theme.focus : Theme.accent)
-                    .frame(width: 8, height: 8)
-                    .padding(.leading, 6)
-                    .accessibilityHidden(true)
+                LogoMark(size: 17, wave: model.active?.status == .running ? Theme.focus : Theme.accent)
+                    .padding(.leading, 5)
+                    .padding(.trailing, 1)
             }
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
@@ -145,7 +143,7 @@ struct WelcomeView: View {
     var body: some View {
         VStack(spacing: 14) {
             Spacer()
-            Image(systemName: "checklist").font(.system(size: 30)).foregroundStyle(Theme.accent)
+            LogoMark(size: 44)
             Text("Choose your Obsidian vault").font(.system(size: 15, weight: .semibold))
             Text("Tasks and focus history are saved as Markdown in a “Task Manager” folder inside it.")
                 .font(.system(size: 12))

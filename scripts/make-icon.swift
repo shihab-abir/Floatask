@@ -1,9 +1,12 @@
-// Draws the Floatask app icon (1024×1024 PNG). Used by scripts/make-icon.sh.
+// Draws the Floatask app icon (1024×1024 PNG) from Resources/Logo.svg. Used by scripts/make-icon.sh.
 //   swift scripts/make-icon.swift <output.png>
 import AppKit
 
 let size: CGFloat = 1024
 let out = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "icon_1024.png"
+guard let logo = NSImage(contentsOf: URL(fileURLWithPath: "Resources/Logo.svg")) else {
+    fatalError("Resources/Logo.svg not found — run from the repository root")
+}
 
 let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size), pixelsHigh: Int(size), bitsPerSample: 8,
                            samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
@@ -22,43 +25,26 @@ let tile = CGRect(x: 100, y: 100, width: 824, height: 824)
 let tilePath = CGPath(roundedRect: tile, cornerWidth: 185, cornerHeight: 185, transform: nil)
 
 ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: color(0x000000, 0.28))
+ctx.setShadow(offset: CGSize(width: 0, height: -12), blur: 28, color: color(0x000000, 0.22))
 ctx.addPath(tilePath)
-ctx.setFillColor(color(0x5E8463))
-ctx.fillPath()
-ctx.restoreGState()
-
-// Soft vertical gradient (sage).
-ctx.saveGState()
-ctx.addPath(tilePath)
-ctx.clip()
-let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
-                          colors: [color(0x7FA585), color(0x4F7354)] as CFArray, locations: [0, 1])!
-ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: tile.maxY), end: CGPoint(x: 0, y: tile.minY), options: [])
-ctx.restoreGState()
-
-// Paper card.
-let card = CGRect(x: 262, y: 262, width: 500, height: 500)
-ctx.saveGState()
-ctx.setShadow(offset: CGSize(width: 0, height: -6), blur: 18, color: color(0x1E2B20, 0.25))
-ctx.addPath(CGPath(roundedRect: card, cornerWidth: 96, cornerHeight: 96, transform: nil))
 ctx.setFillColor(color(0xFBFAF8))
 ctx.fillPath()
 ctx.restoreGState()
 
-// Checkmark.
-ctx.setStrokeColor(color(0x5E8463))
-ctx.setLineWidth(62)
-ctx.setLineCap(.round)
-ctx.setLineJoin(.round)
-ctx.move(to: CGPoint(x: 372, y: 520))
-ctx.addLine(to: CGPoint(x: 470, y: 418))
-ctx.addLine(to: CGPoint(x: 660, y: 618))
-ctx.strokePath()
+// Warm paper gradient, same family as the panel background.
+ctx.saveGState()
+ctx.addPath(tilePath)
+ctx.clip()
+let gradient = CGGradient(colorsSpace: CGColorSpace(name: CGColorSpace.sRGB),
+                          colors: [color(0xFDFCFA), color(0xEDEAE4)] as CFArray, locations: [0, 1])!
+ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: tile.maxY), end: CGPoint(x: 0, y: tile.minY), options: [])
+ctx.restoreGState()
 
-// Small amber "focus" dot.
-ctx.setFillColor(color(0xE3A75E))
-ctx.fillEllipse(in: CGRect(x: 690, y: 690, width: 92, height: 92))
+// The mark, optically centred.
+let side: CGFloat = 520
+let aspect = logo.size.width / logo.size.height
+let mark = CGRect(x: (size - side * aspect) / 2, y: (size - side) / 2, width: side * aspect, height: side)
+logo.draw(in: mark)
 
 NSGraphicsContext.restoreGraphicsState()
 try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: out))

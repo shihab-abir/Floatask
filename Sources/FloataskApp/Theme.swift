@@ -105,3 +105,33 @@ struct QuietButtonStyle: ButtonStyle {
 /// The macOS 26 SDK declares `@State` as a macro whose plugin ships only with Xcode. Building with the
 /// Command Line Tools, we reach the underlying property wrapper through this alias instead.
 typealias ViewState<Value> = SwiftUI.State<Value>
+
+/// The Floatask mark, drawn from the two layers in Resources so it follows light/dark mode:
+/// the frame takes the text colour, the wave takes the accent (amber while a focus session runs).
+struct LogoMark: View {
+    var size: CGFloat = 16
+    var wave: Color = Theme.accent
+
+    private static func layer(_ name: String) -> NSImage? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "svg"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.isTemplate = true
+        return image
+    }
+    private static let frameImage = layer("LogoFrame")
+    private static let waveImage = layer("LogoWave")
+
+    var body: some View {
+        ZStack {
+            if let f = LogoMark.frameImage, let w = LogoMark.waveImage {
+                Image(nsImage: f).resizable().foregroundStyle(Theme.text)
+                Image(nsImage: w).resizable().foregroundStyle(wave)
+            } else {
+                Circle().fill(wave).frame(width: size / 2, height: size / 2)
+            }
+        }
+        .aspectRatio(218 / 221, contentMode: .fit)
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
