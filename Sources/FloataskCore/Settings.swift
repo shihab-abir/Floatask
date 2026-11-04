@@ -75,8 +75,13 @@ public struct LocalConfig: Codable, Equatable {
 
     public static var fileURL: URL { directory.appendingPathComponent("config.json") }
 
+    /// Where config lived when the app was called Taskflow (before 0.2.0); read once, then saved to the new place.
+    static var legacyFileURL: URL {
+        directory.deletingLastPathComponent().appendingPathComponent("Taskflow/config.json")
+    }
+
     public static func load() -> LocalConfig {
-        guard let data = try? Data(contentsOf: fileURL),
+        guard let data = (try? Data(contentsOf: fileURL)) ?? (try? Data(contentsOf: legacyFileURL)),
               let c = try? JSONDecoder().decode(LocalConfig.self, from: data) else { return LocalConfig() }
         return c
     }

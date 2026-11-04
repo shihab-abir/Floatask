@@ -162,7 +162,17 @@ public enum Keychain {
         return SecItemAdd(q as CFDictionary, nil) == errSecSuccess
     }
 
+    /// Keys saved while the app was called Taskflow (before 0.2.0) are moved over on first read.
+    static let legacyService = "io.github.shihab-abir.taskflow"
+
     public static func read(_ account: String) -> String? {
+        if let value = read(account, service: service) { return value }
+        guard let old = read(account, service: legacyService) else { return nil }
+        if save(old, account: account) { delete(account, service: legacyService) }
+        return old
+    }
+
+    static func read(_ account: String, service: String) -> String? {
         let q: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -176,7 +186,7 @@ public enum Keychain {
     }
 
     @discardableResult
-    public static func delete(_ account: String) -> Bool {
+    public static func delete(_ account: String, service: String = service) -> Bool {
         let q: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

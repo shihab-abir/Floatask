@@ -99,6 +99,15 @@ if pgrep -xq Floatask; then
   pkill -x Floatask 2>/dev/null || true
 fi
 
+# Floatask was called Taskflow before 0.2.0 — remove the old copy (vault data and settings are kept).
+LEGACY_APP="$APP_DIR/Taskflow.app"
+if [[ -d "$LEGACY_APP" ]]; then
+  step "Replacing the older Taskflow app"
+  pkill -x Taskflow 2>/dev/null || true
+  rm -rf "$LEGACY_APP"
+fi
+[[ -L "$BIN_DIR/taskflow" ]] && rm -f "$BIN_DIR/taskflow"
+
 mkdir -p "$APP_DIR" "$BIN_DIR"
 rm -rf "$APP"
 ditto "$BUILT" "$APP"
