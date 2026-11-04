@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          swiftc --version
+
+      - name: Core tests
+        run: scripts/test.sh
+
+      - name: Build app + CLI
+        run: scripts/build.sh
+
+      - name: Smoke-test CLI
+        run: |
+          CLI=build/Taskflow.app/Contents/MacOS/taskflow-cli
+          "$CLI" version
+          VAULT="$RUNNER_TEMP/vault"; mkdir -p "$VAULT/.obsidian"
+          "$CLI" config "$VAULT"
+          "$CLI" add "Smoke test task" --due tomorrow
+          "$CLI" done 1
+          "$CLI" list
+          grep -q "\- \[x\] Smoke test task" "$VAULT/Task Manager/Tasks.md"
+
+      - name: Shellcheck scripts
+        run: |
+          brew list shellcheck >/dev/null 2>&1 || brew install shellcheck
+          shellcheck -S error install.sh uninstall.sh scripts/*.sh

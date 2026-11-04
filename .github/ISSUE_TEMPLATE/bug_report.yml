@@ -1,0 +1,27 @@
+name: Bug report
+description: Something isn't working as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Taskflow version
+      description: Run `taskflow version` in Terminal.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 26.1
+  - type: textarea
+    id: log
+    attributes:
+      label: Log (optional)
+      description: Relevant lines from ~/Library/Logs/Taskflow.log. Please remove anything private.
+      render: text

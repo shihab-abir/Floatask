@@ -1,0 +1,53 @@
+name: Release
+
+# Push a tag that matches the VERSION file to publish a release:
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches VERSION
+        run: |
+          FILE_VERSION="v$(tr -d '[:space:]' < VERSION)"
+          if [ "$FILE_VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match VERSION file ($FILE_VERSION)"
+            exit 1
+          fi
+
+      - name: Test
+        run: scripts/test.sh
+
+      - name: Package
+        run: scripts/package.sh
+
+      - name: Release notes from CHANGELOG
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          awk -v v="## [$VERSION]" 'index($0, v)==1 {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          cat >> "$RUNNER_TEMP/notes.md" <<'EOF'
+
+          ### Install
+          ```bash
+          curl -fsSL https://raw.githubusercontent.com/shihab-abir/Work-Management-App/main/install.sh | bash
+          ```
+          Requires macOS 26+ on Apple silicon. See the README for manual installation.
+          EOF
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Taskflow ${{ github.ref_name }}
+          body_path: ${{ runner.temp }}/notes.md
+          files: |
+            dist/*.zip
+            dist/*.sha256
