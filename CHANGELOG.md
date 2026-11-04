@@ -6,6 +6,23 @@ All notable changes to Floatask are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04
+
+### Changed
+- The app is now called **Floatask**, with a new logo and app icon. The command is `floatask`.
+  Installing over Taskflow removes the old app and keeps your vault, settings and saved API key.
+
+### Added
+- Three ways to see the task list, switched with tabs under the progress bar (⌘1 / ⌘2 / ⌘3):
+  - **Up next** — your own working order. Drag tasks to rearrange them, or use ⌥↑ / ⌥↓ or the
+    right-click menu. Subtasks move with their parent. The order is saved in `Tasks.md` as an
+    `order:` value in each task's hidden comment.
+  - **Groups** — tasks under their `##` headings, as before.
+  - **Priority** — High, Medium, Low and No priority, each in your Up next order.
+- The "next" hint and the focus-task picker follow your Up next order.
+- `floatask move N top|up|down|bottom|POSITION`. `floatask list` numbers tasks the same way as the
+  view chosen in the app.
+
 ## [0.1.0] - 2026-11-04
 
 First public release.
@@ -36,5 +53,6 @@ First public release.
 - Light/dark/system theme, opacity setting, keyboard shortcuts and VoiceOver labels.
 - One-line installer and uninstaller. GitHub Actions CI and automated releases.
 
-[Unreleased]: https://github.com/shihab-abir/Floatask/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/shihab-abir/Floatask/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/shihab-abir/Floatask/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/shihab-abir/Floatask/releases/tag/v0.1.0

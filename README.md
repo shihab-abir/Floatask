@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="docs/images/icon.png" width="112" alt="Floatask icon">
+  <img src="docs/images/icon.png" width="112" alt="Floatask logo">
 </p>
 
 <h1 align="center">Floatask</h1>
 
 <p align="center">
   A small, calm, always-on-top task panel for macOS. It saves everything as plain Markdown in your Obsidian vault.<br>
-  Checklists · focus timer · time tracking · history · private on-device AI assistant
+  Checklists · your own working order · focus timer · time tracking · history · private on-device AI assistant
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/panel-light.png" width="300" alt="Floatask panel in light mode with a running focus timer">
+  <img src="docs/images/panel-light.png" width="300" alt="Floatask panel in light mode showing the Up next list">
   &nbsp;&nbsp;
   <img src="docs/images/panel-dark.png" width="300" alt="Floatask panel in dark mode">
 </p>
@@ -32,6 +32,9 @@ account and no cloud; your data lives in your own vault.
 
 - **Checklist with subtasks.** Add a task with Enter. Nest steps under it. A progress bar shows how
   much is done.
+- **Three ways to see your list.** **Up next** is the order you'll actually work in: drag tasks to
+  rearrange them. **Groups** shows tasks under their headings. **Priority** sorts them into High,
+  Medium, Low and No priority. Switch with the tabs under the progress bar.
 - **Focus timer.** Pomodoro-style, adjustable in 5-minute steps, linked to the task you're working on.
 - **Time tracking and history.** Focus time per task, today and this week, plus completed tasks by day.
 - **Obsidian-native.** Tasks are normal `- [ ]` checkboxes in `Task Manager/Tasks.md`. Tick one in
@@ -89,7 +92,8 @@ cd Floatask
 ```
 </details>
 
-**Update:** run the install command again. **Uninstall** (your tasks are kept):
+**Update:** run the install command again. (Floatask used to be called Taskflow. Installing it replaces
+the old app and keeps your vault, settings and saved API key.) **Uninstall** (your tasks are kept):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/uninstall.sh | bash
@@ -105,7 +109,9 @@ curl -fsSL https://raw.githubusercontent.com/shihab-abir/Floatask/main/uninstall
 | Quit | click **×**, or `floatask quit` |
 | Move | drag the panel's title bar, or drag the pill anywhere |
 | Resize | drag the panel's bottom-right corner |
-| Edit a task | double-click it. Right-click for priority, due date, group, delete |
+| Switch list view | the **Up next · Groups · Priority** tabs (or `⌘1` `⌘2` `⌘3`) |
+| Set your working order | in **Up next**, drag a task up or down (subtasks come along) |
+| Edit a task | double-click it. Right-click for priority, due date, group, order, delete |
 | Track focus | pick a task under the timer, press **Start** |
 
 Closing the app never loses a running timer. It carries on when you reopen.
@@ -119,16 +125,18 @@ Closing the app never loses a running timer. It carries on when you reopen.
 | `Space` | Check / uncheck | `⌘K` | Assistant |
 | `↩` or `F` | Make it the focus task | `⌘Y` | History |
 | `E` | Edit task | `⌘M` | Collapse |
+| `⌥↑` `⌥↓` | Move task in Up next | `⌘1` `⌘2` `⌘3` | Up next / Groups / Priority |
 | `Esc` | Back / return to your previous app | | |
 
 ### Terminal
 
 ```text
 floatask                          open the panel
-floatask list                     show open tasks, numbered
+floatask list                     show open tasks, numbered (in the view chosen in the app)
 floatask add "Call printer" --due tomorrow --priority high
 floatask add "Hero section" --under 1        add a subtask to task 1
 floatask done 3                   complete task 3   (floatask undo 3 reopens it)
+floatask move 4 top               put task 4 first in Up next   (also up, down, bottom, or a number)
 floatask focus 1 25               25-minute focus session on task 1
 floatask pause | resume | stop
 floatask status | history
@@ -150,7 +158,7 @@ Task Manager/
 ```
 
 ```markdown
-- [ ] Finish landing page · due 2026-10-02 · high #design <!-- id:t_20260929_ab12 -->
+- [ ] Finish landing page · due 2026-10-02 · high #design <!-- id:t_20260929_ab12 order:1 -->
 	- [x] Hero section <!-- id:t_20260929_ef56 done:2026-09-29T11:00:00+06:00 -->
 ```
 
